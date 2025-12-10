@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    <style>
+        /* CSS for the Registration Page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e9ecef; /* Light background for the form page */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        h2 {
+            color: #004080; /* Dark Blue Header */
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't affect total width */
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-submit {
+            background-color: #28a745; /* Green */
+            color: white;
+        }
+
+        .btn-submit:hover {
+            background-color: #218838;
+        }
+
+        .btn-back {
+            background-color: #ffc107; /* Yellow/Orange */
+            color: #333;
+        }
+
+        .btn-back:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-cancel {
+            background-color: #dc3545; /* Red */
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>New User Registration</h2>
+        <form action="/submit-registration" method="POST">
+            
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="regno">Registration No.</label>
+                <input type="text" id="regno" name="regno" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone No.</label>
+                <input type="text" id="phone" name="phone" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email ID</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn btn-submit">Submit</button>
+                <button type="button" class="btn btn-back" onclick="window.location.href='index.html'">Back</button>
+                <button type="reset" class="btn btn-cancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

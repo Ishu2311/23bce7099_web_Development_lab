@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro User Management | LocalStorage</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --danger: #ef4444;
+            --text-dark: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header { text-align: center; color: white; margin-bottom: 40px; }
+
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        /* Form Styling */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .btn-row { margin-top: 20px; display: flex; gap: 10px; }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-submit { background: var(--primary); color: white; width: 100%; }
+        .btn-clear { background: #64748b; color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+
+        .btn-delete { background: var(--danger); color: white; padding: 5px 12px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>User Registration System</h1>
+        <p>Manage your records with HTML5 LocalStorage</p>
+    </div>
+
+    <div class="card">
+        <form id="userForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number (10 Digits)</label>
+                    <input type="tel" id="mobile" required>
+                </div>
+                <div class="form-group">
+                    <label>Password (Min 6 chars)</label>
+                    <input type="password" id="password" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit">Register User</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0;">Registered Users</h2>
+            <button class="btn-clear" onclick="clearAll()">Clear All Users</button>
+        </div>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="userBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const userForm = document.getElementById('userForm');
+    const userBody = document.getElementById('userBody');
+
+    // Load users on startup
+    document.addEventListener('DOMContentLoaded', displayUsers);
+
+    userForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const mobile = document.getElementById('mobile').value;
+        const password = document.getElementById('password').value;
+
+        // Validations
+        if (mobile.length !== 10 || isNaN(mobile)) {
+            alert("Mobile number must be exactly 10 digits.");
+            return;
+        }
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters.");
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+
+        // Check for duplicate email
+        if (users.find(u => u.email === email)) {
+            alert("This email is already registered.");
+            return;
+        }
+
+        // Add new user object
+        users.push({ name, email, mobile, password });
+        localStorage.setItem('users', JSON.stringify(users));
+        
+        userForm.reset();
+        displayUsers();
+    });
+
+    function displayUsers() {
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        userBody.innerHTML = '';
+
+        users.forEach((user, index) => {
+            const row = `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.mobile}</td>
+                    <td><button class="btn-delete" onclick="deleteUser(${index})">Delete</button></td>
+                </tr>
+            `;
+            userBody.innerHTML += row;
+        });
+    }
+
+    function deleteUser(index) {
+        let users = JSON.parse(localStorage.getItem('users'));
+        users.splice(index, 1);
+        localStorage.setItem('users', JSON.stringify(users));
+        displayUsers();
+    }
+
+    function clearAll() {
+        if (confirm("Are you sure you want to delete ALL users?")) {
+            localStorage.removeItem('users');
+            displayUsers();
+        }
+    }
+</script>
+
+</body>
+</html>

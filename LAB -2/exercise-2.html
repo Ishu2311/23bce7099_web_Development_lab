@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Multimedia Player</title>
+    <style>
+        /* Modern Background using a mesh gradient */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e5e7eb;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container { 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            max-width: 650px; 
+            width: 100%;
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2); 
+        }
+
+        h1 { color: #1f2937; margin-bottom: 30px; font-weight: 300; }
+
+        section { 
+            margin-bottom: 30px; 
+            padding: 20px;
+            border-radius: 15px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+
+        h2 { 
+            font-size: 1.1rem; 
+            color: #4b5563; 
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        video { 
+            width: 100%; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        audio { width: 100%; margin-top: 10px; }
+
+        .time-display { 
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold; 
+            color: #2563eb; 
+            margin-top: 12px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Experience Media</h1>
+
+    <section>
+        <h2>Cinematic Nature</h2>
+        <video id="myVideo" controls poster="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1000&auto=format&fit=crop">
+            <source src="https://vjs.zencdn.net/v/oceans.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="time-display">⏱ <span id="videoTime">0:00</span></div>
+    </section>
+
+    <section>
+        <h2>Ambient Soundscape</h2>
+        <audio id="myAudio" controls>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div class="time-display">🎵 <span id="audioTime">0:00</span></div>
+    </section>
+</div>
+
+<script>
+    const video = document.getElementById('myVideo');
+    const audio = document.getElementById('myAudio');
+    const vTime = document.getElementById('videoTime');
+    const aTime = document.getElementById('audioTime');
+
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return "0:00";
+        let mins = Math.floor(seconds / 60);
+        let secs = Math.floor(seconds % 60);
+        if (secs < 10) secs = '0' + secs;
+        return mins + ':' + secs;
+    }
+
+    video.addEventListener('timeupdate', () => {
+        vTime.innerText = formatTime(video.currentTime);
+    });
+
+    audio.addEventListener('timeupdate', () => {
+        aTime.innerText = formatTime(audio.currentTime);
+    });
+</script>
+
+</body>
+</html>

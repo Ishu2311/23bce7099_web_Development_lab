@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Monitor | SecureLog</title>
+    <style>
+        :root {
+            --primary: #2d3436;
+            --accent: #0984e3;
+            --warning: #fab1a0;
+            --danger: #d63031;
+            --bg: #dfe6e9;
+        }
+
+        body { font-family: 'Courier New', Courier, monospace; background: var(--bg); margin: 0; padding: 20px; }
+        .dashboard { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+
+        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: 80vh; display: flex; flex-direction: column; }
+        h2 { margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px; font-size: 1.2rem; }
+
+        /* Simulation Area */
+        .interactive-zone { display: flex; flex-direction: column; gap: 15px; }
+        .trigger-box { padding: 20px; background: #f1f2f6; border: 2px dashed #ccc; text-align: center; cursor: pointer; border-radius: 4px; }
+        input { padding: 12px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+
+        /* Log Styling */
+        #log-container { flex-grow: 1; overflow-y: auto; background: #2d3436; color: #55efc4; padding: 10px; border-radius: 4px; font-size: 0.85rem; }
+        .log-entry { margin-bottom: 5px; border-left: 2px solid #55efc4; padding-left: 8px; }
+        .log-type { color: #ffeaa7; font-weight: bold; }
+
+        /* Warnings */
+        #alert-box { color: var(--danger); font-weight: bold; padding: 10px; text-align: center; visibility: hidden; }
+        .blink { animation: blinker 0.6s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-reset { background: #636e72; color: white; }
+        .btn-export { background: var(--accent); color: white; }
+    </style>
+</head>
+<body id="root-body">
+
+<div class="dashboard">
+    <div class="panel">
+        <h2>Interactive Zone</h2>
+        <div class="interactive-zone">
+            <p>Interact with these elements to generate logs:</p>
+            <div class="trigger-box" id="click-target">Click Me Rapidly!</div>
+            <input type="text" id="key-target" placeholder="Type something here...">
+            <input type="text" id="focus-target" placeholder="Focus / Blur test...">
+            
+            <div id="alert-box">⚠️ SUSPICIOUS ACTIVITY DETECTED</div>
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn btn-reset" onclick="resetLogs()">Reset</button>
+            <button class="btn btn-export" onclick="exportLogs()">Export Text</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Activity Log (Real-time)</h2>
+        <div id="log-container"></div>
+    </div>
+</div>
+
+
+
+<script>
+    // 1. DATA STORAGE
+    let activities = [];
+    const CLICK_THRESHOLD = 10; // Clicks within 3 seconds
+    let clickCount = 0;
+    let clickTimer = null;
+
+    const logContainer = document.getElementById('log-container');
+    const alertBox = document.getElementById('alert-box');
+
+    // 2. EVENT TRACKING LOGIC
+    
+    // Using Bubbling (Global listener)
+    document.addEventListener('click', (e) => {
+        logActivity('CLICK', `Target: ${e.target.tagName}#${e.target.id || 'no-id'}`);
+        handleSuspiciousClicks();
+    }, false);
+
+    // Using Capturing (Demonstration)
+    window.addEventListener('focus', (e) => {
+        if(e.target.tagName === "INPUT") {
+            logActivity('FOCUS', `Input field gained focus`);
+        }
+    }, true); // 'true' enables Capturing
+
+    document.addEventListener('blur', (e) => {
+        if(e.target.tagName === "INPUT") {
+            logActivity('BLUR', `Input field lost focus`);
+        }
+    }, true);
+
+    document.getElementById('key-target').addEventListener('keydown', (e) => {
+        logActivity('KEYPRESS', `Key: ${e.key}`);
+    });
+
+    // 3. CORE FUNCTIONS
+    function logActivity(type, details) {
+        const entry = {
+            timestamp: new Date().toLocaleTimeString(),
+            type: type,
+            details: details
+        };
+        activities.push(entry);
+        renderLog(entry);
+    }
+
+    function renderLog(entry) {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = `[${entry.timestamp}] <span class="log-type">${entry.type}</span>: ${entry.details}`;
+        logContainer.prepend(div); // Show newest at top
+    }
+
+    // 4. SUSPICIOUS ACTIVITY LOGIC
+    function handleSuspiciousClicks() {
+        clickCount++;
+        
+        if (!clickTimer) {
+            clickTimer = setTimeout(() => {
+                if (clickCount >= CLICK_THRESHOLD) {
+                    triggerWarning();
+                }
+                clickCount = 0;
+                clickTimer = null;
+            }, 3000);
+        }
+    }
+
+    function triggerWarning() {
+        alertBox.style.visibility = 'visible';
+        alertBox.classList.add('blink');
+        logActivity('SECURITY', 'Rapid click threshold exceeded!');
+        
+        setTimeout(() => {
+            alertBox.style.visibility = 'hidden';
+            alertBox.classList.remove('blink');
+        }, 5000);
+    }
+
+    // 5. RESET & EXPORT
+    function resetLogs() {
+        activities = [];
+        logContainer.innerHTML = '';
+        alertBox.style.visibility = 'hidden';
+        console.clear();
+    }
+
+    function exportLogs() {
+        if (activities.length === 0) return alert("No logs to export!");
+        
+        let text = "USER ACTIVITY LOG\n=================\n";
+        activities.forEach(a => {
+            text += `[${a.timestamp}] ${a.type}: ${a.details}\n`;
+        });
+
+        // Create download link
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Activity_Log_${Date.now()}.txt`;
+        a.click();
+    }
+</script>
+
+</body>
+</html>

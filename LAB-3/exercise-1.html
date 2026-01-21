@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Registration System</title>
+    <style>
+        /* --- CSS STYLES --- */
+        :root {
+            --primary: #4a90e2;
+            --error: #e74c3c;
+            --success: #2ecc71;
+            --bg: #f5f7fa;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 40px; }
+        
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        
+        h2 { margin-top: 0; color: #333; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+
+        .field-group { margin-bottom: 18px; position: relative; }
+        
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; color: #555; }
+
+        input, select {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;
+            box-sizing: border-box; transition: all 0.3s; font-size: 1rem;
+        }
+
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 5px rgba(74, 144, 226, 0.3); }
+
+        /* Error States */
+        input.invalid { border-color: var(--error); background-color: #fffcfc; }
+        .error-text { color: var(--error); font-size: 0.75rem; margin-top: 4px; min-height: 15px; font-weight: 500; }
+
+        /* Password Strength Meter */
+        .meter-container { height: 4px; background: #eee; margin-top: 8px; border-radius: 2px; overflow: hidden; }
+        #strengthBar { height: 100%; width: 0%; transition: width 0.4s, background-color 0.4s; }
+
+        button {
+            width: 100%; background: var(--primary); color: white; border: none; padding: 12px;
+            border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s;
+        }
+
+        button:hover { background: #357abd; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Register Account</h2>
+    <form id="adaptiveForm" novalidate>
+        
+        <div class="field-group">
+            <label>Full Name</label>
+            <input type="text" id="name" placeholder="John Doe">
+            <div class="error-text" id="nameError"></div>
+        </div>
+
+        <div class="field-group">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="email@example.com">
+            <div class="error-text" id="emailError"></div>
+        </div>
+
+        <div class="field-group">
+            <label>User Role</label>
+            <select id="role">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin (High Security)</option>
+            </select>
+        </div>
+
+        <div class="field-group" id="skillsWrapper" style="display:none;">
+            <label>Professional Skills</label>
+            <input type="text" id="skills" placeholder="JavaScript, SQL, Teaching...">
+            <div class="error-text" id="skillsError"></div>
+        </div>
+
+        <div class="field-group">
+            <label>Age</label>
+            <input type="number" id="age" min="1">
+            <div class="error-text" id="ageError"></div>
+        </div>
+
+        <div class="field-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••">
+            <div class="meter-container"><div id="strengthBar"></div></div>
+            <div class="error-text" id="passwordError"></div>
+        </div>
+
+        <div class="field-group">
+            <label>Confirm Password</label>
+            <input type="password" id="confirmPassword" placeholder="••••••••">
+            <div class="error-text" id="confirmError"></div>
+        </div>
+
+        <button type="submit" id="submitBtn">Create Account</button>
+    </form>
+</div>
+
+
+
+<script>
+    /* --- JAVASCRIPT LOGIC --- */
+
+    const form = document.getElementById('adaptiveForm');
+    const roleEl = document.getElementById('role');
+    const skillsWrapper = document.getElementById('skillsWrapper');
+    const passwordEl = document.getElementById('password');
+    const strengthBar = document.getElementById('strengthBar');
+
+    // 1. DYNAMIC UI: Show skills for Teacher/Admin only
+    roleEl.addEventListener('change', () => {
+        const isAdvancedRole = (roleEl.value === 'teacher' || roleEl.value === 'admin');
+        skillsWrapper.style.display = isAdvancedRole ? 'block' : 'none';
+        validateAll(); // Re-validate immediately when role changes
+    });
+
+    // 2. HELPER: Feedback Management
+    function displayFeedback(id, message) {
+        const input = document.getElementById(id);
+        const errorDiv = document.getElementById(id + 'Error') || document.getElementById(id.replace('confirmPassword', 'confirm') + 'Error');
+        
+        if (message) {
+            input.classList.add('invalid');
+            errorDiv.textContent = message;
+        } else {
+            input.classList.remove('invalid');
+            errorDiv.textContent = '';
+        }
+    }
+
+    // 3. LOGIC: Strength Meter
+    passwordEl.addEventListener('input', () => {
+        const val = passwordEl.value;
+        let score = 0;
+        if (val.length > 5) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        const colors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71'];
+        const widths = ['25%', '50%', '75%', '100%'];
+        
+        strengthBar.style.width = val.length > 0 ? widths[score-1] || '10%' : '0%';
+        strengthBar.style.backgroundColor = colors[score-1] || colors[0];
+    });
+
+    // 4. CORE VALIDATION FUNCTION
+    function validateAll() {
+        let isFormValid = true;
+        const role = roleEl.value;
+
+        // Name Validation
+        const nameVal = document.getElementById('name').value.trim();
+        if (nameVal.length < 3) {
+            displayFeedback('name', 'Name must be at least 3 characters.');
+            isFormValid = false;
+        } else displayFeedback('name', '');
+
+        // Dynamic Email Validation
+        const emailVal = document.getElementById('email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailVal)) {
+            displayFeedback('email', 'Please enter a valid email address.');
+            isFormValid = false;
+        } else if (role === 'admin' && !emailVal.endsWith('@admin.com')) {
+            displayFeedback('email', 'Admins must use an @admin.com email.');
+            isFormValid = false;
+        } else displayFeedback('email', '');
+
+        // Age Validation
+        const ageVal = parseInt(document.getElementById('age').value);
+        if (isNaN(ageVal) || ageVal < 13) {
+            displayFeedback('age', 'Must be at least 13 years old.');
+            isFormValid = false;
+        } else displayFeedback('age', '');
+
+        // Dynamic Password Validation
+        const passVal = passwordEl.value;
+        const confirmVal = document.getElementById('confirmPassword').value;
+        const minLength = (role === 'admin') ? 12 : 8;
+
+        if (passVal.length < minLength) {
+            displayFeedback('password', `${role.toUpperCase()} requires min ${minLength} characters.`);
+            isFormValid = false;
+        } else displayFeedback('password', '');
+
+        if (passVal !== confirmVal) {
+            displayFeedback('confirmPassword', 'Passwords do not match.');
+            isFormValid = false;
+        } else displayFeedback('confirmPassword', '');
+
+        // Dynamic Skills Validation
+        if (skillsWrapper.style.display === 'block') {
+            if (document.getElementById('skills').value.trim() === "") {
+                displayFeedback('skills', 'Please list at least one skill.');
+                isFormValid = false;
+            } else displayFeedback('skills', '');
+        }
+
+        return isFormValid;
+    }
+
+    // 5. REAL-TIME HIGHLIGHTING
+    const allInputs = document.querySelectorAll('input');
+    allInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            // Validate the individual field on type for real-time highlighting
+            validateAll(); 
+        });
+    });
+
+    // 6. FORM SUBMISSION
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        if (validateAll()) {
+            alert('Form successfully submitted as ' + roleEl.value + '!');
+            form.reset();
+            strengthBar.style.width = '0';
+        } else {
+            console.log('Submission blocked: Validation rules not met.');
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Feedback | Web Technology</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%);
+            margin: 0; padding: 40px 20px; color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container { 
+            max-width: 700px; margin: 0 auto; background: var(--card); 
+            padding: 40px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+        }
+
+        /* Progress Header */
+        .header { margin-bottom: 30px; }
+        .progress-container { height: 8px; background: #e2e8f0; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        #progress-fill { height: 100%; width: 0%; background: var(--primary); transition: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        h1 { font-size: 1.8rem; font-weight: 800; margin: 0; }
+        .sub { color: var(--text-light); font-size: 0.95rem; }
+
+        /* Form Styling */
+        .q-block { 
+            margin-bottom: 25px; padding: 25px; border-radius: 16px; 
+            background: #fdfdfd; border: 1.5px solid #f1f5f9; transition: 0.3s;
+        }
+        .q-block:focus-within { border-color: var(--primary); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.05); }
+
+        .label { display: block; font-weight: 600; margin-bottom: 12px; font-size: 1.05rem; }
+        .required { color: var(--error); margin-left: 4px; }
+
+        input[type="text"], select, textarea {
+            width: 100%; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; 
+            font-size: 1rem; outline: none; transition: 0.2s; box-sizing: border-box; font-family: inherit;
+        }
+        textarea { height: 100px; resize: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #fff; }
+
+        /* Stars Rating */
+        .stars { display: flex; gap: 8px; flex-direction: row-reverse; justify-content: flex-end; }
+        .stars input { display: none; }
+        .stars label { font-size: 2.2rem; color: #e2e8f0; cursor: pointer; transition: 0.2s; }
+        .stars label:hover, .stars label:hover ~ label, .stars input:checked ~ label { color: #fbbf24; }
+
+        /* Checkbox Options */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .opt-item { 
+            display: flex; align-items: center; gap: 10px; padding: 12px; 
+            background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .opt-item:hover { border-color: var(--primary); background: #f5f3ff; }
+
+        /* Suggestion Counter */
+        .counter { text-align: right; font-size: 0.8rem; color: var(--text-light); margin-top: 5px; }
+        .limit-hit { color: var(--error); font-weight: bold; }
+
+        .err-hint { color: var(--error); font-size: 0.85rem; margin-top: 8px; display: none; }
+        .invalid { border-color: var(--error); background: #fff8f8; }
+        .invalid .err-hint { display: block; }
+
+        button { 
+            width: 100%; background: var(--primary); color: white; border: none; padding: 18px; 
+            border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            margin-top: 20px;
+        }
+        button:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Course Feedback</h1>
+        <p class="sub">Module: Web Technology (HTML, CSS, JS, Node)</p>
+        <div class="progress-container"><div id="progress-fill"></div></div>
+    </div>
+
+    <form id="feedbackForm" novalidate>
+        <div id="surveyContainer"></div>
+        <button type="submit">Submit Feedback</button>
+    </form>
+</div>
+
+<script>
+    // 1. DATA CONFIGURATION
+    const schema = [
+        { id: "student", type: "text", label: "Your Full Name", req: true },
+        { id: "rating", type: "stars", label: "Clarity of Technical Concepts", req: true },
+        { id: "topics", type: "checkbox", label: "Favorite Tech Stacks Covered", req: true, 
+          opts: ["Frontend (React/CSS)", "Backend (Node/SQL)", "API Design", "Deployment"] },
+        { id: "resource", type: "select", label: "Learning Resources Quality", req: true,
+          opts: ["Excellent", "Adequate", "Need More Hands-on"] },
+        { id: "suggest", type: "textarea", label: "Suggestions for Improvement", req: false, limit: 150 }
+    ];
+
+    // 2. BUILD FORM
+    function init() {
+        const container = document.getElementById('surveyContainer');
+        schema.forEach(q => {
+            const block = document.createElement('div');
+            block.className = 'q-block';
+            block.id = `group-${q.id}`;
+            
+            block.innerHTML = `<label class="label">${q.label}${q.req ? '<span class="required">*</span>' : ''}</label>`;
+
+            if (q.type === 'text') {
+                const input = document.createElement('input');
+                input.id = q.id;
+                input.placeholder = "Enter your name...";
+                input.oninput = updateProgress;
+                block.appendChild(input);
+            } 
+            else if (q.type === 'stars') {
+                const div = document.createElement('div');
+                div.className = 'stars';
+                for(let i=5; i>=1; i--) {
+                    div.innerHTML += `<input type="radio" name="${q.id}" id="s${i}" value="${i}" onchange="updateProgress()">
+                                     <label for="s${i}">★</label>`;
+                }
+                block.appendChild(div);
+            }
+            else if (q.type === 'checkbox') {
+                const grid = document.createElement('div');
+                grid.className = 'options-grid';
+                q.opts.forEach(opt => {
+                    grid.innerHTML += `
+                        <label class="opt-item">
+                            <input type="checkbox" name="${q.id}" value="${opt}" onchange="updateProgress()">
+                            <span>${opt}</span>
+                        </label>`;
+                });
+                block.appendChild(grid);
+            }
+            else if (q.type === 'select') {
+                const sel = document.createElement('select');
+                sel.id = q.id;
+                sel.onchange = updateProgress;
+                sel.innerHTML = `<option value="">Select an option</option>` + 
+                                q.opts.map(o => `<option value="${o}">${o}</option>`).join('');
+                block.appendChild(sel);
+            }
+            else if (q.type === 'textarea') {
+                const area = document.createElement('textarea');
+                area.id = q.id;
+                area.placeholder = "How can we improve this course?";
+                const count = document.createElement('div');
+                count.className = 'counter';
+                count.id = `cnt-${q.id}`;
+                count.innerText = `0 / ${q.limit}`;
+
+                area.oninput = () => {
+                    const len = area.value.length;
+                    count.innerText = `${len} / ${q.limit}`;
+                    count.className = len > q.limit ? 'counter limit-hit' : 'counter';
+                    updateProgress();
+                };
+                block.appendChild(area);
+                block.appendChild(count);
+            }
+
+            const hint = document.createElement('div');
+            hint.className = 'err-hint';
+            hint.id = `err-${q.id}`;
+            block.appendChild(hint);
+            container.appendChild(block);
+        });
+    }
+
+    // 3. CORE FUNCTIONS
+    function updateProgress() {
+        const requiredFields = schema.filter(q => q.req);
+        let filled = 0;
+
+        requiredFields.forEach(q => {
+            if (q.type === 'text' || q.type === 'select') {
+                if (document.getElementById(q.id).value.trim() !== "") filled++;
+            } else if (q.type === 'stars' || q.type === 'checkbox') {
+                if (document.querySelector(`input[name="${q.id}"]:checked`)) filled++;
+            }
+        });
+
+        const percent = (filled / requiredFields.length) * 100;
+        document.getElementById('progress-fill').style.width = percent + "%";
+    }
+
+    document.getElementById('feedbackForm').onsubmit = (e) => {
+        e.preventDefault();
+        let valid = true;
+
+        schema.forEach(q => {
+            const block = document.getElementById(`group-${q.id}`);
+            const hint = document.getElementById(`err-${q.id}`);
+            let isFilled = true;
+
+            if (q.req) {
+                if (q.type === 'text' || q.type === 'select') isFilled = !!document.getElementById(q.id).value;
+                else isFilled = !!document.querySelector(`input[name="${q.id}"]:checked`);
+            }
+
+            if (!isFilled) {
+                block.classList.add('invalid');
+                hint.innerText = "This field is required for the certification.";
+                valid = false;
+            } else {
+                block.classList.remove('invalid');
+            }
+        });
+
+        if (valid) {
+            alert("Feedback Submitted! Check the console for JSON data.");
+            console.log("Captured Data:", gather());
+        }
+    };
+
+    function gather() {
+        const data = {};
+        schema.forEach(q => {
+            if (q.type === 'checkbox') data[q.id] = [...document.querySelectorAll(`input[name="${q.id}"]:checked`)].map(i => i.value);
+            else if (q.type === 'stars') data[q.id] = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
+            else data[q.id] = document.getElementById(q.id).value;
+        });
+        return data;
+    }
+
+    init();
+</script>
+
+</body>
+</html>

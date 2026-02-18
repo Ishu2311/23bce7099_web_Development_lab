@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            width: 380px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #4facfe;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #007bff;
+        }
+
+        #spinner {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: red;
+            margin-top: 15px;
+        }
+
+        .weather-card {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+        .weather-card p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+
+        .temp {
+            font-size: 28px;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🌦 Weather Dashboard</h2>
+
+    <input type="text" id="cityInput" placeholder="Enter city name">
+    <button onclick="getWeather()">Search</button>
+
+    <div id="spinner" class="hidden">Loading weather data...</div>
+
+    <div id="weatherResult"></div>
+</div>
+
+<script>
+
+let cachedCity = "";
+let cachedData = null;
+
+function getWeather() {
+
+    const city = document.getElementById("cityInput").value.trim();
+    const resultDiv = document.getElementById("weatherResult");
+    const spinner = document.getElementById("spinner");
+
+    resultDiv.innerHTML = "";
+
+    if (city === "") {
+        resultDiv.innerHTML = "<p class='error'>Please enter a city name</p>";
+        return;
+    }
+
+    if (city.toLowerCase() === cachedCity.toLowerCase()) {
+        displayWeather(cachedData);
+        return;
+    }
+
+    spinner.classList.remove("hidden");
+
+    const apiKey = "f7ce5c931573f04a1e143c781470075a";  
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+
+    xhr.onload = function () {
+
+        spinner.classList.add("hidden");
+
+        const data = JSON.parse(xhr.responseText);
+
+        if (data.cod == 200) {
+            cachedCity = city;
+            cachedData = data;
+            displayWeather(data);
+        } else {
+            resultDiv.innerHTML = "<p class='error'>" + data.message + "</p>";
+        }
+    };
+
+    xhr.onerror = function () {
+        spinner.classList.add("hidden");
+        resultDiv.innerHTML = "<p class='error'>Network error. Please try again.</p>";
+    };
+
+    xhr.send();
+}
+
+function displayWeather(data) {
+
+    const resultDiv = document.getElementById("weatherResult");
+
+    resultDiv.innerHTML = `
+        <div class="weather-card">
+            <p><strong>City:</strong> ${data.name}</p>
+            <p class="temp">${data.main.temp} °C</p>
+            <p><strong>Humidity:</strong> ${data.main.humidity} %</p>
+            <p><strong>Condition:</strong> ${data.weather[0].description}</p>
+        </div>
+    `;
+}
+
+</script>
+
+</body>
+</html>

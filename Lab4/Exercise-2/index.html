@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX Product Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .search-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .search-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        #searchInput:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        #searchStatus {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #007bff;
+            font-size: 14px;
+            display: none;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #results {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 200px;
+        }
+        .product {
+            display: flex;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .product:last-child {
+            border-bottom: none;
+        }
+        .product-image {
+            width: 80px;
+            height: 80px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .product-details h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        .price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+            margin: 5px 0;
+        }
+        .category {
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #495057;
+            display: inline-block;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h1>🔍 Product Search</h1>
+        <div class="search-group">
+            <label for="searchInput">Search Products</label>
+            <input type="text" id="searchInput" placeholder="Type to search products..." autocomplete="off">
+            <div id="searchStatus"></div>
+        </div>
+    </div>
+    
+    <div id="results">
+        <div class="no-results">Start typing to search products...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const searchStatus = document.getElementById('searchStatus');
+            const resultsContainer = document.getElementById('results');
+            let timeoutId;
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                clearTimeout(timeoutId);
+                
+                searchStatus.style.display = 'none';
+                resultsContainer.innerHTML = '<div class="no-results">Start typing to search products...</div>';
+
+                if (query.length < 2) return;
+
+                timeoutId = setTimeout(() => performSearch(query), 300);
+            });
+
+            async function performSearch(query) {
+                showLoading();
+
+                try {
+                    const response = await fetch('products.json');
+                    if (!response.ok) throw new Error('Failed to fetch products');
+                    
+                    const products = await response.json();
+                    
+                    const filteredProducts = products.filter(product => 
+                        product.name.toLowerCase().includes(query) ||
+                        product.category.toLowerCase().includes(query)
+                    );
+
+                    displayResults(filteredProducts);
+
+                } catch (error) {
+                    showError('Failed to fetch products. Please try again.');
+                    console.error('Search error:', error);
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            function showLoading() {
+                searchStatus.innerHTML = '<span class="spinner"></span>Searching...';
+                searchStatus.style.display = 'block';
+            }
+
+            function hideLoading() {
+                searchStatus.style.display = 'none';
+            }
+
+            function showError(message) {
+                resultsContainer.innerHTML = `<div class="error">${message}</div>`;
+            }
+
+            function displayResults(products) {
+                if (products.length === 0) {
+                    resultsContainer.innerHTML = '<div class="no-results">No results found</div>';
+                    return;
+                }
+
+                const productsHTML = products.map(product => `
+                    <div class="product">
+                        <div class="product-image">📦</div>
+                        <div class="product-details">
+                            <h3>${product.name}</h3>
+                            <div class="price">₹${product.price.toLocaleString('en-IN')}</div>
+                            <span class="category">${product.category}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                resultsContainer.innerHTML = productsHTML;
+            }
+        });
+    </script>
+</body>
+</html>

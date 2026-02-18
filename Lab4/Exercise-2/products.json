@@ -1,0 +1,50 @@
+[
+    {
+        "id": 1,
+        "name": "Wireless Keyboard",
+        "price": 2499,
+        "category": "Electronics"
+    },
+    {
+        "id": 2,
+        "name": "Gaming Mouse",
+        "price": 1499,
+        "category": "Electronics"
+    },
+    {
+        "id": 3,
+        "name": "Office Chair",
+        "price": 9999,
+        "category": "Furniture"
+    },
+    {
+        "id": 4,
+        "name": "Coffee Mug",
+        "price": 499,
+        "category": "Kitchen"
+    },
+    {
+        "id": 5,
+        "name": "Notebook",
+        "price": 299,
+        "category": "Stationery"
+    },
+    {
+        "id": 6,
+        "name": "Bluetooth Speaker",
+        "price": 3999,
+        "category": "Electronics"
+    },
+    {
+        "id": 7,
+        "name": "Desk Lamp",
+        "price": 1799,
+        "category": "Furniture"
+    },
+    {
+        "id": 8,
+        "name": "Stylus Pen",
+        "price": 999,
+        "category": "Electronics"
+    }
+]

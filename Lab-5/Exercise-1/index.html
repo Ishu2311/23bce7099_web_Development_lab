@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Management System - Fixed</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 1200px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .form-container { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin: 15px 0; display: flex; align-items: center; }
+        .form-group label { width: 120px; font-weight: bold; margin-right: 10px; }
+        input, select { padding: 8px 12px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; flex: 1; max-width: 200px; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 4px; font-size: 14px; }
+        .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .message { padding: 12px; margin: 15px 0; border-radius: 4px; font-weight: 500; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        #employeeTableBody tr:hover { background-color: #f5f5f5; }
+        .actions { white-space: nowrap; }
+    </style>
+</head>
+<body>
+    <h1>👥 Employee Management System</h1>
+    
+    <div id="message"></div>
+    
+    <div class="form-container">
+        <h3 id="formTitle">➕ Add New Employee</h3>
+        <form id="employeeForm">
+            <div class="form-group">
+                <label>Employee ID:</label>
+                <input type="number" id="empId" required min="1">
+            </div>
+            <div class="form-group">
+                <label>Name:</label>
+                <input type="text" id="empName" required>
+            </div>
+            <div class="form-group">
+                <label>Department:</label>
+                <select id="empDept" required>
+                    <option value="">Select Department</option>
+                    <option value="IT">💻 IT</option>
+                    <option value="HR">👥 HR</option>
+                    <option value="Finance">💰 Finance</option>
+                    <option value="Marketing">📈 Marketing</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Salary ($):</label>
+                <input type="number" id="empSalary" required min="0" step="1000">
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-success" onclick="saveEmployee()">💾 Save</button>
+                <button type="button" class="btn" onclick="clearForm()">🗑️ Clear</button>
+                <button type="button" class="btn" onclick="loadEmployees()">🔄 Load XML</button>
+                <button type="button" class="btn" onclick="exportXML()">📥 Export XML</button>
+            </div>
+        </form>
+    </div>
+
+    <h3>📋 Employee Records (<span id="totalCount">0</span>)</h3>
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Salary</th>
+                <th style="width: 180px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="employeeTableBody"></tbody>
+    </table>
+
+    <script>
+        let employeesData = []; // Main data store - FIXED HERE
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadEmployees);
+
+        function showMessage(message, type = 'success') {
+            const msgDiv = document.getElementById('message');
+            msgDiv.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => msgDiv.innerHTML = '', 4000);
+        }
+
+        // FIXED: Load XML once and store in memory
+        function loadEmployees() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'employees.xml', true);
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200 && xhr.responseXML) {
+                        parseAndDisplayEmployees(xhr.responseXML);
+                    } else {
+                        // Initialize empty data if no XML
+                        employeesData = [];
+                        displayEmployees();
+                        showMessage('Started with empty employee list. Add your first employee!', 'success');
+                    }
+                }
+            };
+            
+            xhr.onerror = () => {
+                employeesData = [];
+                displayEmployees();
+                showMessage('No XML file found. Working with in-memory data.', 'info');
+            };
+            
+            xhr.send();
+        }
+
+        // FIXED: Parse XML using getElementsByTagName
+        function parseAndDisplayEmployees(xmlDoc) {
+            try {
+                const employees = xmlDoc.getElementsByTagName('employee');
+                employeesData = []; // Reset
+                
+                for (let i = 0; i < employees.length; i++) {
+                    const emp = employees[i];
+                    const id = emp.getAttribute('id');
+                    const name = emp.getElementsByTagName('name')[0]?.textContent || '';
+                    const dept = emp.getElementsByTagName('department')[0]?.textContent || '';
+                    const salary = emp.getElementsByTagName('salary')[0]?.textContent || '0';
+                    
+                    employeesData.push({id, name, dept, salary});
+                }
+                
+                displayEmployees();
+                showMessage(`Loaded ${employeesData.length} employee(s)!`, 'success');
+            } catch (e) {
+                showMessage('XML parse error: ' + e.message, 'error');
+            }
+        }
+
+        // FIXED: Display from in-memory data (INSTANT UPDATE)
+        function displayEmployees() {
+            const tbody = document.getElementById('employeeTableBody');
+            const totalCount = document.getElementById('totalCount');
+            
+            if (employeesData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No employees. Add your first one! 🎉</td></tr>';
+                totalCount.textContent = '0';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            employeesData.forEach(emp => {
+                const row = createEmployeeRow(emp.id, emp.name, emp.dept, emp.salary);
+                tbody.appendChild(row);
+            });
+            
+            totalCount.textContent = employeesData.length;
+        }
+
+        function createEmployeeRow(id, name, dept, salary) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${id}</strong></td>
+                <td>${name}</td>
+                <td>
+                    <span style="background: #e3f2fd; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                        ${dept}
+                    </span>
+                </td>
+                <td style="font-weight: bold; color: #28a745;">
+                    $${parseFloat(salary).toLocaleString()}
+                </td>
+                <td class="actions">
+                    <button class="btn" onclick="editEmployee('${id}')">✏️ Edit</button>
+                    <button class="btn btn-danger" onclick="deleteEmployee('${id}')">🗑️ Delete</button>
+                </td>
+            `;
+            return row;
+        }
+
+        // FIXED: Edit from in-memory data (INSTANT)
+        function editEmployee(id) {
+            const employee = employeesData.find(emp => emp.id == id);
+            if (!employee) {
+                showMessage('Employee not found!', 'error');
+                return;
+            }
+            
+            document.getElementById('empId').value = id;
+            document.getElementById('empName').value = employee.name;
+            document.getElementById('empDept').value = employee.dept;
+            document.getElementById('empSalary').value = employee.salary;
+            document.getElementById('formTitle').innerHTML = '✏️ Update Employee (ID: ' + id + ')';
+            document.getElementById('empId').disabled = true;
+        }
+
+        // FIXED: Save to in-memory data (INSTANT UPDATE)
+        function saveEmployee() {
+            const id = document.getElementById('empId').value;
+            const name = document.getElementById('empName').value.trim();
+            const dept = document.getElementById('empDept').value;
+            const salary = document.getElementById('empSalary').value;
+
+            if (!id || !name || !dept || !salary || parseFloat(salary) <= 0) {
+                showMessage('Please fill all fields correctly!', 'error');
+                return;
+            }
+
+            const existingIndex = employeesData.findIndex(emp => emp.id == id);
+            
+            if (existingIndex === -1) {
+                // CREATE: Add new
+                employeesData.push({id, name, dept, salary});
+                showMessage('✅ Employee added successfully!', 'success');
+            } else {
+                // UPDATE: Modify existing
+                employeesData[existingIndex] = {id, name, dept, salary};
+                showMessage('✅ Employee updated successfully!', 'success');
+            }
+            
+            // FIXED: INSTANT table update
+            displayEmployees();
+            clearForm();
+        }
+
+        // FIXED: Delete from in-memory data (INSTANT)
+        function deleteEmployee(id) {
+            if (!confirm(`Delete employee ID: ${id}?`)) return;
+            
+            const index = employeesData.findIndex(emp => emp.id == id);
+            if (index !== -1) {
+                employeesData.splice(index, 1);
+                displayEmployees();
+                showMessage('✅ Employee deleted successfully!', 'success');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('employeeForm').reset();
+            document.getElementById('empId').disabled = false;
+            document.getElementById('formTitle').innerHTML = '➕ Add New Employee';
+        }
+
+        // Export current data as XML
+        function exportXML() {
+            const xmlDoc = document.implementation.createDocument(null, 'employees', null);
+            const employeesNode = xmlDoc.getElementsByTagName('employees')[0];
+            
+            employeesData.forEach(emp => {
+                const empNode = xmlDoc.createElement('employee');
+                empNode.setAttribute('id', emp.id);
+                
+                const nameNode = xmlDoc.createElement('name');
+                nameNode.textContent = emp.name;
+                const deptNode = xmlDoc.createElement('department');
+                deptNode.textContent = emp.dept;
+                const salaryNode = xmlDoc.createElement('salary');
+                salaryNode.textContent = emp.salary;
+                
+                empNode.appendChild(nameNode);
+                empNode.appendChild(deptNode);
+                empNode.appendChild(salaryNode);
+                employeesNode.appendChild(empNode);
+            });
+            
+            const serializer = new XMLSerializer();
+            const xmlString = serializer.serializeToString(xmlDoc);
+            const blob = new Blob([xmlString], {type: 'application/xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'employees.xml';
+            a.click();
+            URL.revokeObjectURL(url);
+            showMessage('📥 XML exported! Save this file.', 'success');
+        }
+    </script>
+</body>
+</html>

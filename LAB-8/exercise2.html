@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Grades</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .form-group {
+      margin: 10px 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 250px;
+      padding: 6px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      background-color: #007cba;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005a87;
+    }
+    .output {
+      margin-top: 20px;
+      font-family: monospace;
+      white-space: pre;
+      background-color: #f0f8ff;
+      padding: 10px;
+      border-left: 4px solid #007cba;
+    }
+  </style>
+</head>
+<body>
+  <h2>Exercise 2 – Student Object (with User Input)</h2>
+
+  <div class="form-group">
+    <label>ID:</label>
+    <input type="number" id="id" placeholder="101" />
+  </div>
+
+  <div class="form-group">
+    <label>Name:</label>
+    <input type="text" id="name" placeholder="Priya" />
+  </div>
+
+  <div class="form-group">
+    <label>Department:</label>
+    <input type="text" id="department" placeholder="CSE" />
+  </div>
+
+  <div class="form-group">
+    <label>Marks (0–100):</label>
+    <input type="number" id="marks" placeholder="92" />
+  </div>
+
+  <button onclick="showStudent()">Show Student Object</button>
+
+  <div id="output" class="output"></div>
+
+  <script>
+    function showStudent() {
+      // Read user inputs
+      const id = parseInt(document.getElementById("id").value) || 0;
+      const name = document.getElementById("name").value || "Unknown";
+      const department = document.getElementById("department").value || "Unknown";
+      let marks = parseFloat(document.getElementById("marks").value) || 0;
+
+      // Validate marks range (0–100)
+      if (marks < 0 || marks > 100) {
+        document.getElementById("output").innerHTML = `
+Marks must be between 0 and 100.
+Please enter valid marks.
+        `.trim();
+        return;
+      }
+
+      // Original student object
+      const student = {
+        id,
+        name,
+        department,
+        marks
+      };
+
+      // Object destructuring to extract values
+      const { id: sId, name: sName, department: sDept, marks: sMarks } = student;
+
+      // Compute grade based on marks
+      let grade = "F";
+      if (marks >= 90) grade = "A";
+      else if (marks >= 80) grade = "B";
+      else if (marks >= 70) grade = "C";
+      else if (marks >= 60) grade = "D";
+
+      // Use spread operator to create updated object with grade
+      const updatedStudent = {
+        ...student,
+        grade
+      };
+
+      // Show result in the page
+      document.getElementById("output").innerHTML = `
+Student Details (after destructuring):
+id     = ${sId}
+name   = "${sName}"
+dept   = "${sDept}"
+marks  = ${sMarks}
+
+Updated Student Object (with grade):
+{
+  id:        ${updatedStudent.id},
+  name:      "${updatedStudent.name}",
+  department: "${updatedStudent.department}",
+  marks:     ${updatedStudent.marks},
+  grade:     "${updatedStudent.grade}"
+}
+      `.trim();
+    }
+  </script>
+</body>
+</html>

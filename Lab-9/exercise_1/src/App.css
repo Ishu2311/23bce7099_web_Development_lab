@@ -1,0 +1,82 @@
+.profile-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 450px;
+  overflow: hidden;
+}
+
+.profile-header {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+  text-align: center;
+  padding: 40px 20px 30px;
+}
+
+.avatar {
+  font-size: 75px;
+  margin-bottom: 15px;
+}
+
+.profile-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 28px;
+}
+
+.reg-no {
+  margin: 5px 0 0 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+.profile-details {
+  padding: 35px 30px;
+}
+
+.profile-details h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: 600;
+  color: #555;
+}
+
+.value {
+  color: #222;
+  font-weight: 500;
+}
+
+.profile-footer {
+  background: #f8f9fa;
+  text-align: center;
+  padding: 18px;
+  color: #666;
+  font-size: 15px;
+}
